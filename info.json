@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "402a4616c51aea25d6d5199a4b88eab195bd9057",
+    "author": "mpadge <mark.padgham@email.com>",
+    "time": "2022-06-28 12:52:01",
+    "files": 7,
+    "merge": false,
+    "message": "export get_branch_from_url fn\n\nAll internal fn calls in the plumber endpoint must be to exported fns\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi"
+}
