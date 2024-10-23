@@ -1,0 +1,12 @@
+{
+  "commit": {
+    "commit": "304bacd003282bbd24b382f3f47abe81d0b476d1",
+    "author": "mpadge <mark.padgham@email.com>",
+    "time": "2024-10-22 12:29:52",
+    "files": 3,
+    "merge": false,
+    "message": "rm readme.md from .Buildignore [ci skip]\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi"
+}
