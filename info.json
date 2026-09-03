@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "1d2fc1e3bc8ac73be8954460c2ded8462514f7cd",
+    "author": "mpadge <mark.padgham@email.com>",
+    "time": "2026-08-27T14:05:58Z",
+    "files": 3,
+    "merge": false,
+    "message": "add editorsearch vignette for #108\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-09-03T16:10:24Z"
+}
