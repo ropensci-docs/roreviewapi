@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "c146d4a3b5f04a17c45096da11809cb608eceb8a",
+    "author": "mark padgham <mark.padgham@email.com>",
+    "time": "2026-09-25T08:52:59Z",
+    "files": 6,
+    "merge": true,
+    "message": "Merge pull request #112 from ropensci-review-tools/aut-data\n\nactivate new 'get_desc_info' fn for #111"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-09-25T14:04:24Z"
+}
