@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "5e48d4e8d5b9c493f3fec825f333d2c12a8e1408",
+    "author": "mark padgham <mark.padgham@email.com>",
+    "time": "2026-10-09T09:45:04Z",
+    "files": 7,
+    "merge": true,
+    "message": "Merge pull request #113 from ropensci-review-tools/envvar\n\nchange envvar 'mpadge_local' -> 'rrt_test_all'"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-10-10T19:36:03Z"
+}
