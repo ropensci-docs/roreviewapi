@@ -1,0 +1,347 @@
+# Admin Setup
+
+This vignette describes the one-time infrastructure steps required to
+deploy `roreviewapi` on a Digital Ocean droplet, including the editor
+volunteer search feature introduced in v0.2. Endpoints for that feature
+are described in the [editor search
+vignette](https://docs.ropensci.org/roreviewapi/articles/editorsearch.html).
+
+The Software Peer Review Lead should set up a regular alert system to
+automatically check the deployment status. This bash script issues an
+alert if anything is wrong:
+
+``` bash
+#!/usr/bin/env bash
+
+URL="https://reviewbot.ropensci.org"
+status=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+
+if [[ "$status" != "404" ]]; then
+    echo -e "reviewbot is down"
+    exit 1
+fi
+```
+
+That should then be regularly called, for example by calling it within a
+`~/.bashrc` file, or via a local cron job.
+
+## Prerequisites
+
+- SSH access to the Digital Ocean droplet
+- A [Postmark](https://postmarkapp.com) account with a verified sender
+  address
+- Access to the AirTable base containing the editor-in-chief rotation
+  table
+- Ability to request DNS records for your institution’s domain
+
+## Environment variables
+
+Secrets are **not** stored in the `Dockerfile` or anywhere else in the
+git repository. They live in a `.env` file that exists only on the
+droplet, is listed in `.gitignore` and `.dockerignore`, and is injected
+into the `plumber` container at runtime via `env_file: .env` in
+`docker-compose.yml`. Because the file is untracked, `git pull` never
+overwrites it, and the values never end up in an image layer.
+
+Create `.env` in the project directory on the droplet, with one
+`KEY=value` entry per line (no quotes and no `export`), and restrict its
+permissions:
+
+``` bash
+chmod 600 .env
+```
+
+| Variable | Description |
+|----|----|
+| `GITHUB_PAT` | GitHub personal access token (also used as `GITHUB_TOKEN`) |
+| `PKGCHECK_TOKEN` | pkgcheck authentication token |
+| `GMAIL_SENDER` | Sender address used for outgoing emails |
+| `GMAIL_OAUTH_CLIENT_SECRET` | Path to the Google OAuth client secret JSON file, e.g. `/data/email/<client_secret>.json` |
+| `GMAIL_TOKEN_CACHE` | Path to the cached Gmail token, e.g. `/data/email/gmailr_token` |
+| `GMAIL_AUTH_EMAIL` | Google account used to authenticate with Gmail |
+| `AIRTABLE_API_KEY` | AirTable personal access token |
+| `AIRTABLE_BASE_ID` | ID of the AirTable base containing the EiC rotation table |
+| `ROREVIEWAPI_BASE_URL` | Public HTTPS base URL of the deployed API (`https://reviewbot.ropensci.org`) |
+
+At container start, `docker-entrypoint.sh` writes these values to
+`~/.Renviron` (setting `GITHUB_TOKEN` from `GITHUB_PAT`, and
+`ROREV_CONTAINER=true`), so that R can read them, and then starts the
+API. To change a secret, edit `.env` on the droplet and re-run
+`restart.sh`; no change to the `Dockerfile` is needed.
+
+The two `GMAIL_*` file paths must be inside `/data/email/`, which is the
+container side of the bind-mounted data directory (see [Droplet
+preparation](#droplet-preparation)). Place the corresponding files in
+`/srv/roreviewapi/data/` on the droplet. That mount must remain
+read-write, because the Gmail token cache is written back during
+authentication.
+
+## AirTable
+
+1.  Generate a personal access token at
+    <https://airtable.com/create/tokens> with at least
+    `data.records:read` scope on the relevant base. Set this as
+    `AIRTABLE_API_KEY`.
+2.  Open the AirTable base and copy the base ID from the URL
+    (`https://airtable.com/appXXXXXXXX/...`). Set this as
+    `AIRTABLE_BASE_ID`.
+
+The `editor-in-chief-rotation` table within that base must have
+`period_start`, `period_end`, and `acting_eic_email` fields.
+
+## Droplet preparation
+
+Create the persistent data directory that will be bind-mounted into the
+container. This directory holds the SQLite database, the notify-email
+cache file, and the Gmail OAuth client secret and token cache files, and
+must survive container rebuilds.
+
+``` bash
+sudo mkdir -p /srv/roreviewapi/data
+sudo chmod 700 /srv/roreviewapi/data
+```
+
+## DNS
+
+Ask your DNS administrator to add an `A` record pointing your chosen
+subdomain to the droplet’s IP address, for example:
+
+    review.example.org.  IN  A  <droplet-ip>
+
+Allow up to 24 hours for propagation, though it is usually much faster.
+
+## TLS certificate
+
+Once the DNS record is live, obtain a Let’s Encrypt certificate on the
+droplet. The `--standalone` method requires port 80 to be free (stop the
+running stack first if necessary):
+
+``` bash
+sudo apt install certbot
+sudo certbot certonly --standalone -d reviewbot.ropensci.org
+```
+
+The certificate and key are written to
+`/etc/letsencrypt/live/review.example.org/`. Certbot installs a systemd
+timer that renews certificates automatically; confirm it is active:
+
+``` bash
+systemctl status certbot.timer
+```
+
+### Troubleshooting: HTTP-01 challenge failed
+
+The HTTP-01 challenge works by certbot binding a temporary server to
+port 80. Two things can prevent this:
+
+**Port 80 occupied.** The Docker stack must be stopped before running
+certbot, otherwise nginx holds port 80 and the challenge fails
+immediately:
+
+``` bash
+docker-compose down
+sudo certbot certonly --standalone -d review.example.org
+docker-compose up -d
+```
+
+**Port 80 blocked by a firewall.** There are two independent firewalls
+to check:
+
+*Droplet firewall (ufw):*
+
+``` bash
+sudo ufw status
+```
+
+If ufw is active and port 80 is not listed, open it:
+
+``` bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+```
+
+*Digital Ocean cloud firewall:* in the DO console under **Networking →
+Firewalls**, confirm there is an inbound rule allowing TCP port 80 from
+all sources. The cloud firewall sits in front of the droplet and blocks
+traffic before it reaches ufw, so both layers must allow port 80.
+
+To confirm DNS has propagated before retrying certbot, check that the A
+record resolves to the droplet IP:
+
+``` bash
+dig +short review.example.org
+```
+
+## Deployment
+
+Set `NGINX_SERVER_NAME` in the environment before starting the stack —
+this value is substituted into `nginx.conf` at container startup. Ensure
+`.env` exists (see [Environment variables](#environment-variables)),
+then:
+
+``` bash
+export NGINX_SERVER_NAME=review.example.org
+docker-compose up -d --build
+```
+
+Routine redeployment is handled by `restart.sh`, which runs
+`git pull --ff-only`, tears down and rebuilds the stack, and brings it
+back up. It is intended to be called from cron. It locates the project
+directory from its own path, so it needs no editing, but `.env` must sit
+alongside it. Since `.env` is untracked, secrets persist across pulls.
+
+The compose file:
+
+- Mounts `/srv/roreviewapi/data` into the plumber container at
+  `/data/email`, and sets
+  `ROREVIEWAPI_EMAIL_DB=/data/email/searches.sqlite` so the SQLite
+  database persists across rebuilds.
+- Reads secrets from `.env` via `env_file`.
+- Mounts `/etc/letsencrypt` read-only into the nginx container so the
+  certificate is available.
+- Exposes ports 80 (HTTP → HTTPS redirect) and 443 (HTTPS).
+
+### Cron job
+
+`restart.sh` is run on a schedule so that the droplet picks up new
+commits and rebuilds fresh images without manual intervention. One
+authorized admin of the Digital Ocean droplet needs to configure the
+cron job.
+
+The job must run as a user that can run `docker-compose` (either root or
+a member of the `docker` group). The following uses root’s crontab, so
+that the log file below can be written to `/var/log`.
+
+#### Initial setup
+
+1.  Check whether a job already exists (see “Viewing current jobs”
+    below), to avoid creating a duplicate.
+
+2.  Open the crontab for editing; if prompted, choose an editor (`nano`
+    is the easiest):
+
+    ``` bash
+    sudo crontab -e
+    ```
+
+3.  Add the following line, replacing the path with the absolute path to
+    the project checkout on the droplet:
+
+    ``` bash
+    0 0 * * 2 /bin/bash /<path>/<to>/roreviewapi/restart.sh >> /var/log/roreviewapi-restart.log 2>&1
+    ```
+
+    This runs the script at 00:00 every Tuesday. The five leading fields
+    are minute, hour, day of month, month, and day of week (0–7, where
+    both 0 and 7 are Sunday). [crontab.guru](https://crontab.guru) is
+    useful for checking a schedule. The trailing redirect appends all
+    output, including errors, to a log file.
+
+4.  Save and exit. Cron picks up the change automatically; no restart of
+    the cron service is needed.
+
+An absolute path is required because cron does not run in the project
+directory. `restart.sh` finds the project directory (and thus `.env`)
+from its own location, so it needs no other configuration.
+
+#### Viewing current jobs
+
+List the jobs in root’s crontab with:
+
+``` bash
+sudo crontab -l
+```
+
+Omit `sudo` to list the current user’s own crontab instead. Each user
+has a separate crontab, so if nothing appears, check the other user (or
+root) that may have been used to set the job up.
+
+#### Modifying or removing the job
+
+Re-open the crontab with `sudo crontab -e`, edit the line (for example,
+change the schedule fields), and save. To disable the job without
+deleting it, comment the line out by prefixing it with `#`; to remove
+it, delete the line. Confirm the result with `sudo crontab -l`.
+
+#### Checking that it ran
+
+Inspect the log file written by the job:
+
+``` bash
+tail -n 50 /var/log/roreviewapi-restart.log
+```
+
+and confirm the containers are up with `docker ps`. To test the job
+without waiting for the schedule, run the same command by hand:
+
+``` bash
+sudo /bin/bash /<path>/<to>/roreviewapi/restart.sh
+```
+
+## Transferring maintenance
+
+Maintenance falls into two parts with very different transfer costs:
+
+- **Operations** (deploying, debugging, restarting): needs access only.
+  Nothing in `.env` changes.
+- **Credentials tied to an individual**: the Gmail authorization, and
+  the GitHub and AirTable tokens, belong to whoever created them. These
+  must be re-created by the new maintainer if the outgoing person’s
+  accounts will be closed.
+
+### Operations only
+
+When the new person only deploys and debugs, and the existing
+authorizing account stays active:
+
+1.  Add their SSH key and `sudo` access on the droplet.
+2.  Add them to the `roreviewapi` GitHub repository.
+3.  Add them to the `ro-auto-email` Google Cloud project’s IAM.
+4.  Hand over this document and the contents of `.env` (securely, for
+    example via a password manager rather than email or chat).
+
+### Transferring credentials
+
+This is required if the outgoing maintainer’s accounts will become
+unusable, for example on leaving the organization. The values in `.env`
+that are tied to a person are:
+
+| Variable | Tied to | Action on transfer |
+|----|----|----|
+| `GITHUB_PAT` | GitHub account that created it | Replace with a token created by the new maintainer |
+| `AIRTABLE_API_KEY` | AirTable account that created it | Replace with a token created by the new maintainer (see [AirTable](#airtable) for the required scope) |
+| `GMAIL_AUTH_EMAIL`, `GMAIL_TOKEN_CACHE` | Google account that authorized `gmailr` | Replace, following the [Gmail transfer steps](https://docs.ropensci.org/roreviewapi/articles/editorsearch.html#transfer-maintenance) in the editor search vignette |
+| `GMAIL_OAUTH_CLIENT_SECRET`, `GMAIL_SENDER` | Google Cloud project and the `reviewbot@ropensci.org` alias | Unchanged if the same Cloud project and alias are kept |
+| `AIRTABLE_BASE_ID`, `ROREVIEWAPI_BASE_URL`, `PKGCHECK_TOKEN` | Not tied to a person | Unchanged unless the base, URL or pkgcheck service changes |
+
+The steps are then:
+
+1.  The new maintainer creates their own GitHub and AirTable personal
+    access tokens, and completes the Gmail steps in the editor search
+    vignette.
+
+2.  Update `.env` on the droplet with the new values.
+
+3.  Run `restart.sh` (or wait for the next scheduled run) so that the
+    container picks up the new `.env` and credentials:
+
+    ``` bash
+    sudo /bin/bash /<path>/<to>/roreviewapi/restart.sh
+    ```
+
+4.  Verify that the editor search workflow still sends and receives
+    emails (see the editor search vignette).
+
+5.  Once the new setup works, the outgoing maintainer should revoke
+    their old GitHub and AirTable tokens, and the old Google grant.
+
+### Other items to update
+
+- **Cron job.** If the cron job was set up under the outgoing
+  maintainer’s account, move it to root’s crontab (see [Cron
+  job](#cron-job)), or recreate it under the new account.
+- **Git identity.** The `git config` lines in the `Dockerfile` hold the
+  `user.name` and `user.email` used for commits made inside the
+  container.
+- **Uptime alert.** Whoever receives the deployment-status alert at the
+  top of this document should be updated.

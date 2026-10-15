@@ -1,0 +1,102 @@
+# Package index
+
+## Main functions
+
+- [`collate_editor_check()`](https://docs.ropensci.org/roreviewapi/reference/collate_editor_check.md)
+  : Collate list of checks to single concatenated character string
+- [`editor_check()`](https://docs.ropensci.org/roreviewapi/reference/editor_check.md)
+  : Body of main 'editorcheck' response
+- [`serve_api()`](https://docs.ropensci.org/roreviewapi/reference/serve_api.md)
+  : serve plumber API to report on packages
+
+## pkgmatch functions
+
+- [`cran_to_list()`](https://docs.ropensci.org/roreviewapi/reference/cran_to_list.md)
+  : Convert names of CRAN packages to markdown-formatted list.
+- [`pkgmatch_repo()`](https://docs.ropensci.org/roreviewapi/reference/pkgmatch_repo.md)
+  : Body of main 'pkgmatch' response
+- [`ros_to_list()`](https://docs.ropensci.org/roreviewapi/reference/ros_to_list.md)
+  : Convert names of rOpenSci packages to markdown-formatted list.
+
+## Editor email functions
+
+- [`deactivate_search()`](https://docs.ropensci.org/roreviewapi/reference/deactivate_search.md)
+  : Deactivate a volunteer search and delete all associated data
+- [`deactivate_stale_searches()`](https://docs.ropensci.org/roreviewapi/reference/deactivate_stale_searches.md)
+  : Auto-deactivate and delete stale volunteer searches
+- [`handle_click()`](https://docs.ropensci.org/roreviewapi/reference/handle_click.md)
+  : Handle a volunteer link click
+- [`list_searches()`](https://docs.ropensci.org/roreviewapi/reference/list_searches.md)
+  : List all volunteer searches with recipient and click counts
+- [`send_search()`](https://docs.ropensci.org/roreviewapi/reference/send_search.md)
+  : Send a batch of editor search emails
+
+## GitHub-related functions
+
+- [`dl_gh_repo()`](https://docs.ropensci.org/roreviewapi/reference/dl_gh_repo.md)
+  : Download a GitHub repo to local cache
+- [`get_branch_from_url()`](https://docs.ropensci.org/roreviewapi/reference/get_branch_from_url.md)
+  : Get branch from a GitHub URL if non-default branch specified there
+- [`get_subdir_from_url()`](https://docs.ropensci.org/roreviewapi/reference/get_subdir_from_url.md)
+  : Return sub-directory from URL if present. This function is also
+  intended to test whether packages are in sub-directories (issue \#64)
+- [`post_to_issue()`](https://docs.ropensci.org/roreviewapi/reference/post_to_issue.md)
+  : Post review checks to GitHub issue
+- [`url_is_r_pkg()`](https://docs.ropensci.org/roreviewapi/reference/url_is_r_pkg.md)
+  : Check whether a given GitHub URL contains an R package.
+
+## Utility functions
+
+- [`check_cache()`](https://docs.ropensci.org/roreviewapi/reference/check_cache.md)
+  : check_cache
+
+- [`pkgrep_install_deps()`](https://docs.ropensci.org/roreviewapi/reference/pkgrep_install_deps.md)
+  : Install all system and package dependencies of an R package
+
+- [`stdout_stderr_cache()`](https://docs.ropensci.org/roreviewapi/reference/stdout_stderr_cache.md)
+  :
+
+  Set up stdout & stderr cache files for `r_bg` process
+
+- [`symbol_crs()`](https://docs.ropensci.org/roreviewapi/reference/symbol_crs.md)
+  : Cross symbol, exported for direct use in plumber API
+
+- [`symbol_tck()`](https://docs.ropensci.org/roreviewapi/reference/symbol_tck.md)
+  : Tick symbol, exported for direct use in plumber API
+
+- [`readme_badge()`](https://docs.ropensci.org/roreviewapi/reference/readme_badge.md)
+  : Check whether README.md features an rOpenSci software-review badge
+
+## rOpenSci-specific functions
+
+- [`check_issue_template()`](https://docs.ropensci.org/roreviewapi/reference/check_issue_template.md)
+  : Check template variables in GitHub issue
+
+- [`is_user_authorized()`](https://docs.ropensci.org/roreviewapi/reference/is_user_authorized.md)
+  : Check whether a user, identified from GitHub API token, is
+  authorized to call endpoints.
+
+- [`issue_is_stats()`](https://docs.ropensci.org/roreviewapi/reference/issue_is_stats.md)
+  : Determine whether a GitHub issue is a Stats submission
+
+- [`push_to_gh_pages()`](https://docs.ropensci.org/roreviewapi/reference/push_to_gh_pages.md)
+  :
+
+  Push static `html` files to `gh-pages` branch of this repo to serve
+  via GitHub pages.
+
+- [`readme_has_peer_review_badge()`](https://docs.ropensci.org/roreviewapi/reference/readme_has_peer_review_badge.md)
+  : Check whether 'README.md' has a "peer reviewed" badge
+
+- [`srr_counts()`](https://docs.ropensci.org/roreviewapi/reference/srr_counts.md)
+  : Count number of 'srr' statistical standards complied with, and
+  confirm whether than represents \> 50% of all applicable standards.
+
+- [`srr_counts_from_report()`](https://docs.ropensci.org/roreviewapi/reference/srr_counts_from_report.md)
+  : Extract final counts of 'srr' standards from the report
+
+- [`srr_counts_summary()`](https://docs.ropensci.org/roreviewapi/reference/srr_counts_summary.md)
+  : Summarise counts of 'srr' standards from full 'srr' report
+
+- [`stats_badge()`](https://docs.ropensci.org/roreviewapi/reference/stats_badge.md)
+  : Get stats badge grade and standards version for a submission

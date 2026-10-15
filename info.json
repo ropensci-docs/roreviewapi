@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "191f3879d31af9e52ac4d34449cba282842116a2",
+    "author": "mark padgham <mark.padgham@email.com>",
+    "time": "2026-10-15T10:38:48Z",
+    "files": 6,
+    "merge": true,
+    "message": "Merge pull request #119 from ropensci-review-tools/docs\n\nrestruture vignettes for #116"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-10-15T11:05:24Z"
+}
