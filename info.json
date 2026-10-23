@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "e081f788c238a7bcb848b864d3a55a3c20fd63c5",
+    "author": "Maëlle Salmon <maelle.salmon@yahoo.se>",
+    "time": "2026-10-23T06:12:42Z",
+    "files": 1,
+    "merge": false,
+    "message": "docs: update gmail docs\n\nFix update gmail instructions\nFixes #135\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-10-23T13:43:41Z"
+}
