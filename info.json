@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "521bac23baf1e1d24141f9e8cbabe6212156caa4",
+    "author": "Maëlle Salmon <maelle.salmon@yahoo.se>",
+    "time": "2026-11-12T16:06:05Z",
+    "files": 2,
+    "merge": false,
+    "message": "docs: port debugging docs from RTD\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-11-12T16:38:45Z"
+}
