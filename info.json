@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "491463da2d5eb2c11d1a48ac769317de8b8f63bc",
+    "author": "Maëlle Salmon <maelle.salmon@yahoo.se>",
+    "time": "2026-11-16T08:25:50Z",
+    "files": 1,
+    "merge": false,
+    "message": "docs: update docs to be sure one has the GitHub PAT at hand\n"
+  },
+  "repo": "https://github.com/ropensci-review-tools/roreviewapi",
+  "pkg": "roreviewapi",
+  "time": "2026-11-16T09:00:50Z"
+}
